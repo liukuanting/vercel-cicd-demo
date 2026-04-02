@@ -3,6 +3,32 @@ import { SessionCard } from "@/components/session-card";
 import { createClient } from "@/lib/supabase/server";
 import type { SessionRecord } from "@/lib/types";
 
+function normalizeSession(raw: any): SessionRecord {
+  return {
+    id: raw.id,
+    title: raw.title,
+    session_date: raw.session_date,
+    start_time: raw.start_time,
+    end_time: raw.end_time,
+    min_players: raw.min_players,
+    max_players: raw.max_players,
+    skill_level: raw.skill_level,
+    fee: raw.fee,
+    shuttlecock: raw.shuttlecock,
+    location: raw.location,
+    notes: raw.notes,
+    organizer_id: raw.organizer_id,
+    created_at: raw.created_at,
+    profiles: raw.profiles ?? null,
+    session_bookings: Array.isArray(raw.session_bookings)
+      ? raw.session_bookings.map((booking: any) => ({
+          id: booking.id,
+          user_id: booking.user_id
+        }))
+      : []
+  };
+}
+
 async function getSessions() {
   const supabase = await createClient();
   const { data } = await supabase
@@ -13,7 +39,7 @@ async function getSessions() {
     .order("session_date", { ascending: true })
     .order("start_time", { ascending: true });
 
-  return (data || []) as SessionRecord[];
+  return (data ?? []).map(normalizeSession);
 }
 
 export default async function HomePage() {

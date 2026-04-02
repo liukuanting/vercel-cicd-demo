@@ -4,6 +4,15 @@ export type SkillLevel =
   | "advanced"
   | "competitive";
 
+export type SessionProfile =
+  | {
+      display_name: string | null;
+    }
+  | Array<{
+      display_name: string | null;
+    }>
+  | null;
+
 export type SessionRecord = {
   id: string;
   title: string;
@@ -19,9 +28,7 @@ export type SessionRecord = {
   notes: string | null;
   organizer_id: string;
   created_at: string;
-  profiles?: {
-    display_name: string | null;
-  } | null;
+  profiles?: SessionProfile;
   session_bookings?: Array<{
     id: string;
     user_id: string;

@@ -19,6 +19,9 @@ export function SessionCard({
   const isBooked = session.session_bookings?.some(
     (booking) => booking.user_id === userId
   );
+  const organizerName = Array.isArray(session.profiles)
+    ? session.profiles[0]?.display_name
+    : session.profiles?.display_name;
 
   return (
     <article className="session-card">
@@ -78,7 +81,7 @@ export function SessionCard({
       <div className="card-actions">
         <div className="spot-badge">
           {"\u767c\u8d77\u4eba\uff1a"}
-          {session.profiles?.display_name || "\u6703\u54e1"}
+          {organizerName || "\u6703\u54e1"}
         </div>
         {showBookingAction ? (
           <Link href={`/dashboard#session-${session.id}`} className="primary-btn">

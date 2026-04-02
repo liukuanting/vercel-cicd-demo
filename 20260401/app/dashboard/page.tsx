@@ -6,6 +6,32 @@ import { skillLabel } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 import type { SessionRecord } from "@/lib/types";
 
+function normalizeSession(raw: any): SessionRecord {
+  return {
+    id: raw.id,
+    title: raw.title,
+    session_date: raw.session_date,
+    start_time: raw.start_time,
+    end_time: raw.end_time,
+    min_players: raw.min_players,
+    max_players: raw.max_players,
+    skill_level: raw.skill_level,
+    fee: raw.fee,
+    shuttlecock: raw.shuttlecock,
+    location: raw.location,
+    notes: raw.notes,
+    organizer_id: raw.organizer_id,
+    created_at: raw.created_at,
+    profiles: raw.profiles ?? null,
+    session_bookings: Array.isArray(raw.session_bookings)
+      ? raw.session_bookings.map((booking: any) => ({
+          id: booking.id,
+          user_id: booking.user_id
+        }))
+      : []
+  };
+}
+
 async function getDashboardData() {
   const supabase = await createClient();
   const {
@@ -26,7 +52,7 @@ async function getDashboardData() {
 
   return {
     user,
-    sessions: (sessions || []) as SessionRecord[]
+    sessions: (sessions ?? []).map(normalizeSession)
   };
 }
 
@@ -59,6 +85,9 @@ export default async function DashboardPage() {
                 const isBooked = session.session_bookings?.some(
                   (booking) => booking.user_id === user.id
                 );
+                const organizerName = Array.isArray(session.profiles)
+                  ? session.profiles[0]?.display_name
+                  : session.profiles?.display_name;
 
                 return (
                   <section key={session.id} id={`session-${session.id}`} className="form-card">
@@ -103,7 +132,7 @@ export default async function DashboardPage() {
                     <div className="card-actions">
                       <div className="spot-badge">
                         {"\u767c\u8d77\u4eba\uff1a"}
-                        {session.profiles?.display_name || "\u6703\u54e1"}
+                        {organizerName || "\u6703\u54e1"}
                         {" / "}
                         {"\u6700\u5c11 "}
                         {session.min_players}
