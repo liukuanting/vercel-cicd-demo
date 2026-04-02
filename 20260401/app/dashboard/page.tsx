@@ -3,6 +3,7 @@ import { BookingButton } from "@/components/booking-button";
 import { CreateSessionForm } from "@/components/create-session-form";
 import { formatDate, formatMoney } from "@/lib/format";
 import { skillLabel } from "@/lib/labels";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { SessionRecord } from "@/lib/types";
 
@@ -33,6 +34,13 @@ function normalizeSession(raw: any): SessionRecord {
 }
 
 async function getDashboardData() {
+  if (!hasSupabaseEnv()) {
+    return {
+      user: null,
+      sessions: [] as SessionRecord[]
+    };
+  }
+
   const supabase = await createClient();
   const {
     data: { user }
@@ -58,6 +66,24 @@ async function getDashboardData() {
 
 export default async function DashboardPage() {
   const { user, sessions } = await getDashboardData();
+
+  if (!user) {
+    return (
+      <main className="dashboard-shell">
+        <div className="container">
+          <div className="form-card">
+            <div className="preview-ribbon">SETUP REQUIRED</div>
+            <h1>{"\u6703\u54e1\u529f\u80fd\u5c1a\u672a\u555f\u7528"}</h1>
+            <p className="muted">
+              {
+                "\u8acb\u5148\u5728 Vercel Project Settings > Environment Variables \u8a2d\u5b9a NEXT_PUBLIC_SUPABASE_URL \u8207 NEXT_PUBLIC_SUPABASE_ANON_KEY\uff0c\u518d\u91cd\u65b0 Deploy\u3002"
+              }
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="dashboard-shell">

@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { SignOutButton } from "@/components/sign-out-button";
 
 export const metadata: Metadata = {
@@ -15,10 +16,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const configured = hasSupabaseEnv();
+  let user: { id: string } | null = null;
+
+  if (configured) {
+    const supabase = await createClient();
+    const {
+      data: { user: currentUser }
+    } = await supabase.auth.getUser();
+    user = currentUser;
+  }
 
   return (
     <html lang="zh-Hant">
@@ -39,14 +46,14 @@ export default async function RootLayout({
                 <Link href="/#sessions" className="pill-link">
                   {"\u63ea\u5718\u5834\u6b21"}
                 </Link>
-                <Link href="/dashboard" className="pill-link">
+                <Link href={configured ? "/dashboard" : "/#setup"} className="pill-link">
                   {"\u6703\u54e1\u4e2d\u5fc3"}
                 </Link>
                 {user ? (
                   <SignOutButton />
                 ) : (
-                  <Link href="/login" className="primary-btn">
-                    {"\u6703\u54e1\u767b\u5165"}
+                  <Link href={configured ? "/login" : "/#setup"} className="primary-btn">
+                    {configured ? "\u6703\u54e1\u767b\u5165" : "Setup Supabase"}
                   </Link>
                 )}
               </nav>

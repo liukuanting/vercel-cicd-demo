@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SessionCard } from "@/components/session-card";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { SessionRecord } from "@/lib/types";
 
@@ -30,6 +31,10 @@ function normalizeSession(raw: any): SessionRecord {
 }
 
 async function getSessions() {
+  if (!hasSupabaseEnv()) {
+    return [];
+  }
+
   const supabase = await createClient();
   const { data } = await supabase
     .from("badminton_sessions")
@@ -43,6 +48,7 @@ async function getSessions() {
 }
 
 export default async function HomePage() {
+  const configured = hasSupabaseEnv();
   const sessions = await getSessions();
 
   return (
@@ -61,12 +67,20 @@ export default async function HomePage() {
             </p>
 
             <div className="hero-actions">
-              <Link href="/dashboard" className="primary-btn">
-                {"\u9032\u5165\u6703\u54e1\u4e2d\u5fc3"}
-              </Link>
-              <Link href="/login" className="secondary-btn">
-                {"\u5148\u767b\u5165\u518d\u9810\u7d04"}
-              </Link>
+              {configured ? (
+                <>
+                  <Link href="/dashboard" className="primary-btn">
+                    {"\u9032\u5165\u6703\u54e1\u4e2d\u5fc3"}
+                  </Link>
+                  <Link href="/login" className="secondary-btn">
+                    {"\u5148\u767b\u5165\u518d\u9810\u7d04"}
+                  </Link>
+                </>
+              ) : (
+                <a href="#setup" className="primary-btn">
+                  {"\u5148\u5b8c\u6210 Supabase \u8a2d\u5b9a"}
+                </a>
+              )}
             </div>
 
             <div className="hero-stats">
@@ -130,6 +144,13 @@ export default async function HomePage() {
 
       <section className="section" id="sessions">
         <div className="container">
+          {!configured ? (
+            <div className="notice" id="setup" style={{ marginBottom: 20 }}>
+              {
+                "\u76ee\u524d\u5c1a\u672a\u8a2d\u5b9a Supabase \u74b0\u5883\u8b8a\u6578\u3002\u8acb\u5728 Vercel Project Settings > Environment Variables \u52a0\u4e0a NEXT_PUBLIC_SUPABASE_URL \u8207 NEXT_PUBLIC_SUPABASE_ANON_KEY\uff0c\u518d\u91cd\u65b0 Deploy\u3002"
+              }
+            </div>
+          ) : null}
           <div className="section-head">
             <div>
               <h2>{"\u8fd1\u671f\u7fbd\u7403\u5834\u6b21"}</h2>
@@ -139,12 +160,12 @@ export default async function HomePage() {
                 }
               </p>
             </div>
-            <Link href="/dashboard" className="secondary-btn">
-              {"\u6211\u8981\u767c\u8d77\u65b0\u6642\u6bb5"}
+            <Link href={configured ? "/dashboard" : "/#setup"} className="secondary-btn">
+              {configured ? "\u6211\u8981\u767c\u8d77\u65b0\u6642\u6bb5" : "Supabase Setup"}
             </Link>
           </div>
 
-          {sessions.length > 0 ? (
+          {configured && sessions.length > 0 ? (
             <div className="session-grid">
               {sessions.map((session) => (
                 <SessionCard key={session.id} session={session} />
@@ -152,9 +173,9 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="empty">
-              {
-                "\u76ee\u524d\u9084\u6c92\u6709\u5834\u6b21\u3002\u767b\u5165\u6703\u54e1\u4e2d\u5fc3\u5f8c\uff0c\u5c31\u53ef\u4ee5\u767c\u8d77\u7b2c\u4e00\u5834\u7fbd\u7403\u5831\u968a\u6d3b\u52d5\u3002"
-              }
+              {configured
+                ? "\u76ee\u524d\u9084\u6c92\u6709\u5834\u6b21\u3002\u767b\u5165\u6703\u54e1\u4e2d\u5fc3\u5f8c\uff0c\u5c31\u53ef\u4ee5\u767c\u8d77\u7b2c\u4e00\u5834\u7fbd\u7403\u5831\u968a\u6d3b\u52d5\u3002"
+                : "Supabase \u8a2d\u5b9a\u5b8c\u6210\u5f8c\uff0c\u9019\u88e1\u6703\u986f\u793a\u5834\u6b21\u8207\u6703\u54e1\u529f\u80fd\u3002"}
             </div>
           )}
         </div>
